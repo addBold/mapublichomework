@@ -44,6 +44,20 @@
             color: white;
             padding: 20px;
             text-align: center;
+            position: relative;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
         }
 
         h1 {
@@ -93,6 +107,61 @@
             background: var(--primary);
             color: white;
             border-color: var(--primary);
+        }
+
+        /* Мобильное меню */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mobile-menu-content {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        .mobile-nav-btn {
+            display: block;
+            width: 100%;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: var(--light);
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .mobile-nav-btn.active {
+            background: var(--primary);
+            color: white;
         }
 
         /* Основной контент */
@@ -362,6 +431,11 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .empty-message {
             text-align: center;
             color: var(--gray);
@@ -377,8 +451,11 @@
             }
             
             .sidebar {
-                border-right: none;
-                border-bottom: 1px solid #dee2e6;
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
             }
             
             .form-row {
@@ -388,18 +465,41 @@
             .stats {
                 grid-template-columns: 1fr;
             }
+            
+            .homework-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .homework-footer {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu {
+                display: none !important;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
             <h1>📚 Умный дневник домашки</h1>
             <div class="subtitle">Всё твоё домашнее задание в одном месте</div>
         </header>
 
         <div class="app-content">
-            <!-- Боковая панель -->
+            <!-- Боковая панель (только на ПК) -->
             <div class="sidebar">
                 <button class="nav-btn active" onclick="showPage('today')">📅 Сегодня</button>
                 <button class="nav-btn" onclick="showPage('add')">➕ Добавить ДЗ</button>
@@ -501,7 +601,38 @@
         </div>
     </div>
 
+    <!-- Мобильное меню -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-content">
+            <button class="close-btn" id="closeMenuBtn">×</button>
+            <h3 style="text-align: center; margin-bottom: 20px;">Меню</h3>
+            
+            <button class="mobile-nav-btn active" onclick="showMobilePage('today')">📅 Сегодня</button>
+            <button class="mobile-nav-btn" onclick="showMobilePage('add')">➕ Добавить ДЗ</button>
+            <button class="mobile-nav-btn" onclick="showMobilePage('overdue')">⏰ Долги</button>
+            <button class="mobile-nav-btn" onclick="showMobilePage('all')">📋 Все задания</button>
+            <button class="mobile-nav-btn" onclick="showMobilePage('calendar')">🗓️ Календарь</button>
+            <button class="mobile-nav-btn" onclick="showMobilePage('archive')">📁 Архив</button>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="stat-card" style="margin: 0;">
+                        <div class="stat-number" id="mobileStatsPending">0</div>
+                        <div class="stat-label">Не выполнено</div>
+                    </div>
+                    <div class="stat-card" style="margin: 0;">
+                        <div class="stat-number" id="mobileStatsCompleted">0</div>
+                        <div class="stat-label">Выполнено</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Определение устройства
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
         // База данных
         let homeworkDB = JSON.parse(localStorage.getItem('homeworkDB')) || {
             homework: [],
@@ -516,19 +647,64 @@
             updateStats();
             showTodayHomework();
             generateCalendar();
+            setupMobileMenu();
+            
+            // Показываем/скрываем элементы в зависимости от устройства
+            if (isMobile) {
+                document.querySelector('.sidebar').style.display = 'none';
+                document.querySelector('.mobile-menu-btn').style.display = 'block';
+            }
         });
+
+        // Мобильное меню
+        function setupMobileMenu() {
+            const menuBtn = document.getElementById('mobileMenuBtn');
+            const closeBtn = document.getElementById('closeMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+
+            menuBtn.addEventListener('click', function() {
+                mobileMenu.style.display = 'flex';
+                updateMobileStats();
+            });
+
+            closeBtn.addEventListener('click', function() {
+                mobileMenu.style.display = 'none';
+            });
+
+            // Закрытие по клику вне меню
+            mobileMenu.addEventListener('click', function(e) {
+                if (e.target === mobileMenu) {
+                    mobileMenu.style.display = 'none';
+                }
+            });
+        }
+
+        function showMobilePage(pageId) {
+            showPage(pageId);
+            document.getElementById('mobileMenu').style.display = 'none';
+            
+            // Обновляем активные кнопки в мобильном меню
+            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
 
         // Навигация
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
             });
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
+            
+            // Обновляем активные кнопки в ПК меню
+            if (!isMobile) {
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`.nav-btn[onclick="showPage('${pageId}')"]`).classList.add('active');
+            }
             
             document.getElementById(pageId).classList.add('active');
-            event.target.classList.add('active');
 
             // Обновляем контент страницы
             switch(pageId) {
@@ -785,6 +961,16 @@
             
             document.getElementById('statsPending').textContent = pending;
             document.getElementById('statsCompleted').textContent = completed;
+            
+            updateMobileStats();
+        }
+
+        function updateMobileStats() {
+            const pending = homeworkDB.homework.filter(hw => !hw.completed).length;
+            const completed = homeworkDB.homework.filter(hw => hw.completed).length;
+            
+            document.getElementById('mobileStatsPending').textContent = pending;
+            document.getElementById('mobileStatsCompleted').textContent = completed;
         }
 
         // Вспомогательные функции
