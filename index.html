@@ -47,6 +47,30 @@
             position: relative;
         }
 
+        .sync-buttons {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .sync-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .sync-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
         .mobile-menu-btn {
             display: none;
             position: absolute;
@@ -109,59 +133,42 @@
             border-color: var(--primary);
         }
 
-        /* Мобильное меню */
-        .mobile-menu {
+        /* Модальные окна */
+        .modal {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.5);
             z-index: 1000;
             justify-content: center;
             align-items: center;
         }
 
-        .mobile-menu-content {
+        .modal-content {
             background: white;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 20px;
             padding: 30px;
-            position: relative;
-            animation: slideUp 0.3s ease;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: none;
-            border: none;
-            font-size: 28px;
-            cursor: pointer;
-            color: var(--gray);
-        }
-
-        .mobile-nav-btn {
-            display: block;
-            width: 100%;
-            padding: 20px;
-            margin-bottom: 15px;
-            background: var(--light);
-            border: none;
             border-radius: 15px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal h3 {
+            margin-bottom: 15px;
             text-align: center;
         }
 
-        .mobile-nav-btn.active {
-            background: var(--primary);
-            color: white;
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
         }
 
         /* Основной контент */
@@ -252,6 +259,11 @@
 
         .btn-danger {
             background: var(--danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
             color: white;
         }
 
@@ -431,11 +443,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(50px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         .empty-message {
             text-align: center;
             color: var(--gray);
@@ -456,6 +463,13 @@
             
             .mobile-menu-btn {
                 display: block;
+            }
+            
+            .sync-buttons {
+                position: static;
+                transform: none;
+                justify-content: center;
+                margin-top: 10px;
             }
             
             .form-row {
@@ -482,12 +496,6 @@
                 justify-content: flex-end;
             }
         }
-
-        @media (min-width: 769px) {
-            .mobile-menu {
-                display: none !important;
-            }
-        }
     </style>
 </head>
 <body>
@@ -496,10 +504,14 @@
             <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
             <h1>📚 Умный дневник домашки</h1>
             <div class="subtitle">Всё твоё домашнее задание в одном месте</div>
+            <div class="sync-buttons">
+                <button class="sync-btn" onclick="showExportModal()">📤 Экспорт</button>
+                <button class="sync-btn" onclick="showImportModal()">📥 Импорт</button>
+            </div>
         </header>
 
         <div class="app-content">
-            <!-- Боковая панель (только на ПК) -->
+            <!-- Боковая панель -->
             <div class="sidebar">
                 <button class="nav-btn active" onclick="showPage('today')">📅 Сегодня</button>
                 <button class="nav-btn" onclick="showPage('add')">➕ Добавить ДЗ</button>
@@ -601,38 +613,36 @@
         </div>
     </div>
 
-    <!-- Мобильное меню -->
-    <div class="mobile-menu" id="mobileMenu">
-        <div class="mobile-menu-content">
-            <button class="close-btn" id="closeMenuBtn">×</button>
-            <h3 style="text-align: center; margin-bottom: 20px;">Меню</h3>
-            
-            <button class="mobile-nav-btn active" onclick="showMobilePage('today')">📅 Сегодня</button>
-            <button class="mobile-nav-btn" onclick="showMobilePage('add')">➕ Добавить ДЗ</button>
-            <button class="mobile-nav-btn" onclick="showMobilePage('overdue')">⏰ Долги</button>
-            <button class="mobile-nav-btn" onclick="showMobilePage('all')">📋 Все задания</button>
-            <button class="mobile-nav-btn" onclick="showMobilePage('calendar')">🗓️ Календарь</button>
-            <button class="mobile-nav-btn" onclick="showMobilePage('archive')">📁 Архив</button>
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="stat-card" style="margin: 0;">
-                        <div class="stat-number" id="mobileStatsPending">0</div>
-                        <div class="stat-label">Не выполнено</div>
-                    </div>
-                    <div class="stat-card" style="margin: 0;">
-                        <div class="stat-number" id="mobileStatsCompleted">0</div>
-                        <div class="stat-label">Выполнено</div>
-                    </div>
-                </div>
+    <!-- Модальное окно экспорта -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <h3>📤 Экспорт данных</h3>
+            <p>Скопируй этот код и сохрани его. Потом вставь на другом устройстве в окно импорта.</p>
+            <textarea id="exportData" style="width: 100%; height: 200px; margin: 15px 0; font-family: monospace;" readonly></textarea>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="copyExportData()">📋 Копировать</button>
+                <button class="btn" onclick="hideExportModal()">Закрыть</button>
             </div>
         </div>
     </div>
 
+    <!-- Модальное окно импорта -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <h3>📥 Импорт данных</h3>
+            <p>Вставь сюда код из экспорта:</p>
+            <textarea id="importData" style="width: 100%; height: 200px; margin: 15px 0; font-family: monospace;" placeholder="Вставь сюда код..."></textarea>
+            <div class="modal-buttons">
+                <button class="btn btn-success" onclick="importData()">Импортировать</button>
+                <button class="btn btn-danger" onclick="hideImportModal()">Отмена</button>
+            </div>
+            <p style="color: var(--danger); font-size: 12px; margin-top: 10px;">
+                ⚠️ Внимание: Это перезапишет все текущие данные!
+            </p>
+        </div>
+    </div>
+
     <script>
-        // Определение устройства
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
         // База данных
         let homeworkDB = JSON.parse(localStorage.getItem('homeworkDB')) || {
             homework: [],
@@ -647,64 +657,22 @@
             updateStats();
             showTodayHomework();
             generateCalendar();
-            setupMobileMenu();
             
-            // Показываем/скрываем элементы в зависимости от устройства
-            if (isMobile) {
-                document.querySelector('.sidebar').style.display = 'none';
-                document.querySelector('.mobile-menu-btn').style.display = 'block';
-            }
+            // Устанавливаем сегодняшнюю дату по умолчанию в форме
+            document.getElementById('dueDate').value = new Date().toISOString().split('T')[0];
         });
-
-        // Мобильное меню
-        function setupMobileMenu() {
-            const menuBtn = document.getElementById('mobileMenuBtn');
-            const closeBtn = document.getElementById('closeMenuBtn');
-            const mobileMenu = document.getElementById('mobileMenu');
-
-            menuBtn.addEventListener('click', function() {
-                mobileMenu.style.display = 'flex';
-                updateMobileStats();
-            });
-
-            closeBtn.addEventListener('click', function() {
-                mobileMenu.style.display = 'none';
-            });
-
-            // Закрытие по клику вне меню
-            mobileMenu.addEventListener('click', function(e) {
-                if (e.target === mobileMenu) {
-                    mobileMenu.style.display = 'none';
-                }
-            });
-        }
-
-        function showMobilePage(pageId) {
-            showPage(pageId);
-            document.getElementById('mobileMenu').style.display = 'none';
-            
-            // Обновляем активные кнопки в мобильном меню
-            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-        }
 
         // Навигация
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
             });
-            
-            // Обновляем активные кнопки в ПК меню
-            if (!isMobile) {
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.querySelector(`.nav-btn[onclick="showPage('${pageId}')"]`).classList.add('active');
-            }
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
             
             document.getElementById(pageId).classList.add('active');
+            document.querySelector(`.nav-btn[onclick="showPage('${pageId}')"]`).classList.add('active');
 
             // Обновляем контент страницы
             switch(pageId) {
@@ -758,9 +726,9 @@
             // Очистка формы
             document.getElementById('subject').value = '';
             document.getElementById('task').value = '';
-            document.getElementById('dueDate').value = '';
+            document.getElementById('dueDate').value = new Date().toISOString().split('T')[0];
             
-            // Уведомление
+            // Уведомление и переход
             alert('Задание добавлено!');
             showPage('today');
         }
@@ -774,7 +742,7 @@
                 saveToDB();
                 updateStats();
                 
-                // Обновляем отображение в зависимости от текущей страницы
+                // Обновляем отображение
                 const activePage = document.querySelector('.page.active').id;
                 switch(activePage) {
                     case 'today': showTodayHomework(); break;
@@ -820,7 +788,6 @@
 
         // Показать все задания
         function showAllHomework() {
-            // Сортируем по дате выполнения (сначала ближайшие)
             const sortedHomework = [...homeworkDB.homework].sort((a, b) => 
                 new Date(a.dueDate) - new Date(b.dueDate)
             );
@@ -884,7 +851,7 @@
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
             const daysInMonth = lastDay.getDate();
-            const startingDay = firstDay.getDay() || 7; // 1-7 (пн-вс)
+            const startingDay = firstDay.getDay() || 7;
             
             const calendarGrid = document.getElementById('calendarGrid');
             calendarGrid.innerHTML = '';
@@ -914,7 +881,6 @@
                 
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 
-                // Проверяем есть ли задания на эту дату
                 const hasHomework = homeworkDB.homework.some(hw => hw.dueDate === dateStr && !hw.completed);
                 if (hasHomework) {
                     dayElement.classList.add('has-homework');
@@ -954,6 +920,57 @@
             renderHomeworkList(homework, 'selectedDateHomework');
         }
 
+        // Экспорт/Импорт данных
+        function showExportModal() {
+            const exportData = btoa(JSON.stringify(homeworkDB));
+            document.getElementById('exportData').value = exportData;
+            document.getElementById('exportModal').style.display = 'flex';
+        }
+
+        function hideExportModal() {
+            document.getElementById('exportModal').style.display = 'none';
+        }
+
+        function showImportModal() {
+            document.getElementById('importData').value = '';
+            document.getElementById('importModal').style.display = 'flex';
+        }
+
+        function hideImportModal() {
+            document.getElementById('importModal').style.display = 'none';
+        }
+
+        function copyExportData() {
+            const exportData = document.getElementById('exportData');
+            exportData.select();
+            document.execCommand('copy');
+            alert('Данные скопированы!');
+        }
+
+        function importData() {
+            const importData = document.getElementById('importData').value.trim();
+            
+            if (!importData) {
+                alert('Вставь данные для импорта!');
+                return;
+            }
+
+            try {
+                const decodedData = JSON.parse(atob(importData));
+                
+                if (confirm('Это перезапишет все текущие данные. Продолжить?')) {
+                    homeworkDB = decodedData;
+                    saveToDB();
+                    updateStats();
+                    showTodayHomework();
+                    hideImportModal();
+                    alert('Данные успешно импортированы!');
+                }
+            } catch (e) {
+                alert('Ошибка: неверный формат данных!');
+            }
+        }
+
         // Статистика
         function updateStats() {
             const pending = homeworkDB.homework.filter(hw => !hw.completed).length;
@@ -961,16 +978,6 @@
             
             document.getElementById('statsPending').textContent = pending;
             document.getElementById('statsCompleted').textContent = completed;
-            
-            updateMobileStats();
-        }
-
-        function updateMobileStats() {
-            const pending = homeworkDB.homework.filter(hw => !hw.completed).length;
-            const completed = homeworkDB.homework.filter(hw => hw.completed).length;
-            
-            document.getElementById('mobileStatsPending').textContent = pending;
-            document.getElementById('mobileStatsCompleted').textContent = completed;
         }
 
         // Вспомогательные функции
